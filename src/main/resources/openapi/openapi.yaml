@@ -14,7 +14,25 @@ servers:
 
 paths:
 
+
 components:
+  securitySchemes:
+    cookieAuth:
+      description: >
+        Cookie-based authentication scheme. The client must include the `access_token`
+        cookie with a valid JWT token in each request to access protected endpoints.
+      type: apiKey
+      in: cookie
+      name: access_token
+
+    refreshTokenAuth:
+        description: >
+            Refresh token authentication scheme. The client must include the `refresh_token`
+            cookie with a valid refresh token to obtain a new access token and refresh token.
+        type: apiKey
+        in: cookie
+        name: refresh_token
+
   schemas:
     ApiResponse:
       description: The standard response structure for all API requests.
