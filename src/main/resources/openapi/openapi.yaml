@@ -13,6 +13,78 @@ servers:
   - url: 'http'
 
 paths:
+  /signup:
+    post:
+      summary: Create a new user account.
+      description: Create a new user account.
+      requestBody: 
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUpRequest"
+      responses:
+        201:
+          description: User account created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+              example:
+                message: "User account created successfully."
+        400:
+          description: >
+            Bad request due to validation errors.
+            Possible error codes include: E001, VE001, VE002, VE003, VE004, VE005
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseWithFields"
+              example:
+                message: A validation error occurred.
+                errorCode: E001
+                fieldErrors:
+                  name:
+                    - message: Name is required.
+                      errorCode: VE001
+                    - message: Name must be between 1 and 100 characters.
+                      errorCode: VE002
+                    - message: Name must not be blank.
+                      errorCode: VE003
+                  email:
+                    - message: Email is required.
+                      errorCode: VE001
+                    - message: Invalid email format
+                      errorCode: VE004
+                  password:
+                    - message: Password is required.
+                      errorCode: VE001
+                    - message: Password must be between 8 and 128 characters.
+                      errorCode: VE002
+                    - message: Password must contain at least one uppercase letter, one lowercase letter, and one digit.
+                      errorCode: VE005
+        409:
+          description: >
+            Email already in use.
+            Possible error codes include: E002
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: Email already in use.
+                errorCode: E002
+        500:
+          description: >
+            Unknown error.
+            Possible error codes include: E000
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: An unknown error occurred.
+                errorCode: E000
 
 components:
   schemas:
@@ -25,11 +97,13 @@ components:
           description: Name for the new user.
           minLength: 1
           maxLength: 100
-          pattern: '^[?=.*\S].$' # At least one non-whitespace character
+          pattern: '^[?=.*\S].+$' # At least one non-whitespace character
+          example: John Doe
         email:
           type: string
           description: Email for the new user.
           format: email
+          example: johndoe@example.com
         password:
           type: string
           description: Password for the new user.
@@ -38,6 +112,11 @@ components:
           maxLength: 128
           # Requires one lowercase, one uppercase, one digit, and accepts only the defined characters
           pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d''"!@#$%^&*()\-_=+\[\]{};:,.<>\/?\|`~\s]{8,128}$'
+          example: Password@123
+      required:
+        - name
+        - email
+        - password
     
     SuccessResponse:
       type: object
@@ -67,10 +146,7 @@ components:
           type: string
           description: A message indicating the error that occurred.
         errorCode:
-          type: string
-          enum:
-            - E000 # Unknown error
-            - E001 # Validation error
+          $ref: "#/components/schemas/ErrorCode"
 
     ErrorResponseWithFields:
       description: Error response schema containing field-specific errors.
@@ -79,15 +155,45 @@ components:
         - type: object
           properties:
             fieldErrors:
-              type: object
-              description: Field-specific errors.
-              additionalProperties:
-                type:
-                  - 'null'
-                  - array
-                description: Errors for this field. If null, no errors for this field.
-                items:
-                  type: string
+              $ref: "#/components/schemas/FieldErrors"
+                      
+    FieldErrors:
+      type: object
+      description: Field-specific errors.
+      additionalProperties: 
+        type:
+          - 'null'
+          - array
+        description: Errors for this field. If null, no errors for this field.
+        items:
+          type: object
+          description: Error details for the field.
+          properties:
+            message:
+              type: string
+              description: Error message for the field.
+            errorCode:
+              anyOf:
+                - $ref: "#/components/schemas/ErrorCode"
+                - $ref: "#/components/schemas/ValidationErrorCode"
+
+    ErrorCode:
+      type: string
+      description: Error code indicating the type of error.
+      enum:
+        - E000 # Unknown error
+        - E001 # Validation error
+        - E002 # Email already in use
+
+    ValidationErrorCode:
+      type: string
+      description: Validation error code indicating the specific validation issue.
+      enum:
+        - VE001 # Required field missing
+        - VE002 # Out of length range
+        - VE003 # Blank input not allowed
+        - VE004 # Invalid email format
+        - VE005 # Weak password
 
   securitySchemes:
     cookieAuth:
