@@ -14,7 +14,6 @@ servers:
 
 paths:
 
-
 components:
   securitySchemes:
     cookieAuth:
@@ -34,6 +33,9 @@ components:
         name: refresh_token
 
   schemas:
+    # Request Schemas
+
+    # Response  Schemas
     ApiResponse:
       description: The standard response structure for all API requests.
       type: object
@@ -99,12 +101,7 @@ components:
                 minimum: 400
                 maximum: 599
             errors:
-              description: An optional object containing validation errors or additional error details, if applicable.
-              type: object
-              additionalProperties:
-                type: array
-                items:
-                  type: string
+              $ref: '#/components/schemas/ValidationError'
 
     PaginatedData:
       description: A paginated response structure for lists of items.
@@ -130,4 +127,15 @@ components:
         - page
         - pageSize
         - totalPages
+      additionalProperties: false
+
+    ValidationError:
+      description: A schema representing a validation error.
+      type: object
+      patternProperties:
+        '^[a-zA-Z0-9_]+$':
+          description: The name of the field that caused the validation error.
+          type: array
+          items:
+            type: string
       additionalProperties: false
