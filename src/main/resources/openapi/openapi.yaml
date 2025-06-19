@@ -1,0 +1,84 @@
+openapi: 3.1.0
+info:
+  title: KeepFlower API - Task, Routine, and Medication Management
+  description: > 
+    KeepFlower API provides a robust, scalable backend to support client applications
+    (mobile and web) for seamless task management, personalized routines, reminders,
+    and medication tracking. Designed with security, performance, and extensibility in mind,
+    it empowers users to stay organized and maintain healthy habits effortlessly.
+  version: 1.0.0
+servers:
+  - url: 'http'
+paths:
+
+components:
+  schemas:
+    ApiResponse:
+      description: The standard response structure for all API requests.
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          description: The status of the API request.
+        code:
+          type: integer
+          description: HTTP status code.
+        message:
+          description: A message describing the result of the request.
+          type: string
+        timestamp:
+          description: The timestamp of the response.
+          type: string
+          format: date-time
+        path:
+          description: The path of the request.
+          type: string
+      required:
+        - status
+        - code
+        - message
+        - timestamp
+        - path
+      additionalProperties: false
+    SuccessResponse:
+      description: The standard response for successful API requests.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            status:
+              description: The status of the API request, indicating success.
+              type: string
+              enum: [success]
+            code:
+              description: 2xx HTTP status code.
+              type: integer
+              minimum: 200
+              maximum: 299
+            data:
+              description: The data returned by the API, if applicable.
+    ErrorResponse:
+      description: The standard response for failed API requests.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            status:
+              description: The status of the API request, indicating an error.
+              type: string
+              enum: [error]
+            code:
+                description: 4xx or 5xx HTTP status code.
+                type: integer
+                minimum: 400
+                maximum: 599
+            errors:
+              description: An optional object containing validation errors or additional error details, if applicable.
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
