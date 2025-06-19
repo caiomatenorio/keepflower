@@ -15,6 +15,80 @@ servers:
 paths:
 
 components:
+  schemas:
+    SignUpRequest:
+      type: object
+      description: Request schema for user signup.
+      properties: 
+        name:
+          type: string
+          description: Name for the new user.
+          minLength: 1
+          maxLength: 100
+          pattern: '^[?=.*\S].$' # At least one non-whitespace character
+        email:
+          type: string
+          description: Email for the new user.
+          format: email
+        password:
+          type: string
+          description: Password for the new user.
+          format: password
+          minLength: 8
+          maxLength: 128
+          # Requires one lowercase, one uppercase, one digit, and accepts only the defined characters
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d''"!@#$%^&*()\-_=+\[\]{};:,.<>\/?\|`~\s]{8,128}$'
+    
+    SuccessResponse:
+      type: object
+      description: Success response schema.
+      properties:
+        message:
+          type: string
+          description: A success message indicating the operation was successful.
+
+    SuccessResponseWithData:
+      description: Success response schema containing data.
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type:
+                - array
+                - object
+              description: Data returned from the operation, which can be an array or an object.
+
+    ErrorResponse:
+      type: object
+      description: Error response schema.
+      properties:
+        message:
+          type: string
+          description: A message indicating the error that occurred.
+        errorCode:
+          type: string
+          enum:
+            - E000 # Unknown error
+            - E001 # Validation error
+
+    ErrorResponseWithFields:
+      description: Error response schema containing field-specific errors.
+      allOf:
+        - $ref: "#/components/schemas/ErrorResponse"
+        - type: object
+          properties:
+            fieldErrors:
+              type: object
+              description: Field-specific errors.
+              additionalProperties:
+                type:
+                  - 'null'
+                  - array
+                description: Errors for this field. If null, no errors for this field.
+                items:
+                  type: string
+
   securitySchemes:
     cookieAuth:
       description: >
@@ -31,111 +105,3 @@ components:
         type: apiKey
         in: cookie
         name: refresh_token
-
-  schemas:
-    # Request Schemas
-
-    # Response  Schemas
-    ApiResponse:
-      description: The standard response structure for all API requests.
-      type: object
-      properties:
-        status:
-          type: string
-          enum: [success, error]
-          description: The status of the API request.
-        code:
-          type: integer
-          description: HTTP status code.
-        message:
-          description: A message describing the result of the request.
-          type: string
-        timestamp:
-          description: The timestamp of the response.
-          type: string
-          format: date-time
-        path:
-          description: The path of the request.
-          type: string
-      required:
-        - status
-        - code
-        - message
-        - timestamp
-        - path
-      additionalProperties: false
-
-    SuccessResponse:
-      description: The standard response for successful API requests.
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            status:
-              description: The status of the API request, indicating success.
-              type: string
-              enum: [success]
-            code:
-              description: 2xx HTTP status code.
-              type: integer
-              minimum: 200
-              maximum: 299
-            data:
-              description: The data returned by the API, if applicable.
-
-    ErrorResponse:
-      description: The standard response for failed API requests.
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/ApiResponse'
-        - type: object
-          properties:
-            status:
-              description: The status of the API request, indicating an error.
-              type: string
-              enum: [error]
-            code:
-                description: 4xx or 5xx HTTP status code.
-                type: integer
-                minimum: 400
-                maximum: 599
-            errors:
-              $ref: '#/components/schemas/ValidationError'
-
-    PaginatedData:
-      description: A paginated response structure for lists of items.
-      type: object
-      properties:
-        items:
-          description: A list of items in the current page.
-          type: array
-        page:
-          description: The current page number.
-          type: integer
-          minimum: 1
-        pageSize:
-          description: The number of items per page.
-          type: integer
-          minimum: 1
-        totalPages:
-          description: The total number of pages available.
-          type: integer
-          minimum: 1
-      required:
-        - items
-        - page
-        - pageSize
-        - totalPages
-      additionalProperties: false
-
-    ValidationError:
-      description: A schema representing a validation error.
-      type: object
-      patternProperties:
-        '^[a-zA-Z0-9_]+$':
-          description: The name of the field that caused the validation error.
-          type: array
-          items:
-            type: string
-      additionalProperties: false
