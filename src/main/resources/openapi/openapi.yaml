@@ -11,12 +11,18 @@ info:
 
 servers:
   - url: 'http'
+    
+security:
+  - cookieAuth: []
 
 paths:
   /signup:
     post:
       summary: Create a new user account.
       description: Create a new user account.
+      tags:
+        - Auth
+      security: []
       requestBody: 
         required: true
         content:
@@ -97,7 +103,7 @@ components:
           description: Name for the new user.
           minLength: 1
           maxLength: 100
-          pattern: '^[?=.*\S].+$' # At least one non-whitespace character
+          pattern: '^(?=.*\S).+$' # At least one non-whitespace character
           example: John Doe
         email:
           type: string
@@ -133,9 +139,7 @@ components:
         - type: object
           properties:
             data:
-              type:
-                - array
-                - object
+              type: object
               description: Data returned from the operation, which can be an array or an object.
 
     ErrorResponse:
@@ -173,9 +177,7 @@ components:
               type: string
               description: Error message for the field.
             errorCode:
-              anyOf:
-                - $ref: "#/components/schemas/ErrorCode"
-                - $ref: "#/components/schemas/ValidationErrorCode"
+              $ref: "#/components/schemas/ValidationErrorCode"
 
     ErrorCode:
       type: string
